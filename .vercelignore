@@ -1,0 +1,14 @@
+.venv
+.pytest_cache
+__pycache__
+docs
+publish
+openspec
+.claude
+backend/tests
+meetingnote.db
+*.wav
+*.mp3
+TODO.md
+CLAUDE.md
+투두가드설명서.md

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MeetingNote Pro - 회의록 목록</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="theme.js"></script>
+</head>
+
+<body class="bg-page dark:bg-canvas text-ink dark:text-fg font-sans antialiased min-h-screen flex flex-col">
+
+<div id="header"></div>
+
+<main class="flex-1 w-full max-w-6xl mx-auto px-4 py-5">
+
+  <!-- 검색 줄 -->
+  <section id="searchBox" class="mb-4">
+    <div class="flex flex-col sm:flex-row gap-2.5">
+      <input id="q" type="search" placeholder="제목 또는 참석자로 검색">
+      <div class="flex flex-wrap sm:flex-nowrap gap-2.5">
+        <div class="flex-1 basis-[calc(50%-0.3125rem)] sm:flex-none sm:basis-40"><input id="from" type="date" aria-label="시작일"></div>
+        <div class="flex-1 basis-[calc(50%-0.3125rem)] sm:flex-none sm:basis-40"><input id="to" type="date" aria-label="종료일"></div>
+        <div class="w-full sm:w-auto"><button id="newBtn" type="button" class="w-full whitespace-nowrap">새 회의록</button></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 새 회의록 패널 -->
+  <section id="newPanel" class="hidden mb-4">
+    <h2 class="text-sm font-extrabold mb-3">새 회의록</h2>
+    <div class="grid gap-3 sm:grid-cols-2">
+      <div>
+        <label for="nTitle" class="block text-xs font-bold mb-1.5">제목</label>
+        <input id="nTitle" placeholder="2차 스프린트 계획 회의">
+      </div>
+      <div>
+        <label for="nAt" class="block text-xs font-bold mb-1.5">회의 시각</label>
+        <input id="nAt" type="datetime-local">
+      </div>
+      <div class="sm:col-span-2">
+        <label for="nWho" class="block text-xs font-bold mb-1.5">참석자</label>
+        <input id="nWho" placeholder="김대리, 박과장, 이주임">
+      </div>
+    </div>
+
+    <!-- 녹취 올리기 -->
+    <div id="dropZone" class="mt-3 rounded-xl border-2 border-dashed border-line dark:border-edge px-4 py-6 text-center cursor-pointer">
+      <p class="text-[13px] font-bold" id="dropTitle">녹취 파일을 끌어다 놓기</p>
+      <p id="dropSub" class="mt-1"></p>
+      <div id="progWrap" class="hidden mt-3">
+        <progress id="prog" max="100" value="0"></progress>
+        <p id="progText" class="mt-1.5 text-[11px] font-bold"></p>
+      </div>
+      <input id="file" type="file" accept=".mp3,.wav,audio/mpeg,audio/wav" class="hidden">
+    </div>
+    <div id="dropErr" class="hidden mt-2.5"></div>
+
+    <textarea id="nBody" rows="4" class="mt-3" placeholder="받아쓴 본문 또는 붙여넣은 메모"></textarea>
+    <div id="saveErr" class="hidden mt-2.5"></div>
+
+    <div class="mt-3 flex gap-2.5 justify-end">
+      <button id="cancelBtn" type="button">취소</button>
+      <button id="saveBtn" type="button">정리하기</button>
+    </div>
+    <p id="panelHelp" class="mt-2.5"></p>
+  </section>
+
+  <!-- 목록 -->
+  <section>
+    <div class="flex items-baseline gap-2 mb-3">
+      <h2 class="text-sm font-extrabold">회의록</h2>
+      <span id="count"></span>
+    </div>
+    <div id="list" class="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3"></div>
+    <div id="empty" class="hidden px-5 py-12 text-center">
+      <p class="text-sm font-bold" id="emptyTitle">아직 회의록이 없음</p>
+      <p class="mt-1" id="emptySub">새 회의록 버튼으로 첫 회의를 올려 보기</p>
+    </div>
+  </section>
+</main>
+
+<script src="js/app.js"></script>
+<script src="js/meetings.js"></script>
+</body>
+</html>

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MeetingNote Pro - 팀 설정</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="theme.js"></script>
+</head>
+
+<body class="bg-page dark:bg-canvas text-ink dark:text-fg font-sans antialiased min-h-screen flex flex-col">
+
+<div id="header"></div>
+
+<main class="flex-1 w-full max-w-6xl mx-auto px-4 py-5 space-y-4">
+
+  <!-- 팀 만들기 / 합류 (소속 팀이 없을 때) -->
+  <section id="onboard" class="hidden p-5">
+    <h1 class="text-lg font-extrabold">아직 소속 팀이 없음</h1>
+    <p id="onboardSub" class="mt-1">팀을 새로 만들거나, 받은 초대코드로 합류</p>
+    <div class="mt-4 grid gap-3 sm:grid-cols-2">
+      <div id="createBox" class="p-4">
+        <p class="text-[13px] font-extrabold mb-2">팀 만들기</p>
+        <input id="newName" placeholder="팀 이름">
+        <button id="createBtn" type="button" class="mt-2.5 w-full">만들기</button>
+      </div>
+      <div id="joinBox" class="p-4">
+        <p class="text-[13px] font-extrabold mb-2">초대코드로 합류</p>
+        <input id="joinCode" placeholder="MN-7K2D" autocomplete="off">
+        <button id="joinBtn" type="button" class="mt-2.5 w-full">합류</button>
+      </div>
+    </div>
+    <div id="onboardErr" class="hidden mt-3"></div>
+  </section>
+
+  <div id="teamView" class="hidden space-y-4">
+    <!-- 팀 정보 -->
+    <section id="info" class="p-5">
+      <div class="flex flex-wrap items-start gap-4">
+        <div class="flex-1 min-w-[200px]">
+          <label for="tName" class="block text-[11px] font-bold text-ink-3 dark:text-dim mb-1">팀 이름</label>
+          <input id="tName" class="font-bold">
+          <button id="saveName" type="button" class="mt-2">이름 저장</button>
+        </div>
+        <div>
+          <p class="text-[11px] font-bold text-ink-3 dark:text-dim mb-1">초대코드</p>
+          <div class="flex gap-2">
+            <div id="code" class="h-11 px-4 grid place-items-center rounded-xl bg-page dark:bg-chip border border-line dark:border-edge font-mono text-sm font-extrabold tracking-[0.2em]"></div>
+            <button id="copyBtn" type="button">복사</button>
+            <button id="newCodeBtn" type="button">재발급</button>
+          </div>
+        </div>
+      </div>
+      <p id="lockNote" class="hidden mt-3"></p>
+      <div id="codeMsg" class="hidden mt-3"></div>
+    </section>
+
+    <!-- 멤버 -->
+    <section id="memberBox" class="p-5">
+      <div class="flex items-baseline gap-2 mb-3">
+        <h2 class="text-sm font-extrabold">멤버 <span id="mCap" class="text-ink-3 dark:text-dim font-bold"></span></h2>
+        <span id="mLimit" class="ml-auto">팀당 6명 이내</span>
+      </div>
+      <ul id="members" class="grid gap-2 sm:grid-cols-2"></ul>
+    </section>
+
+    <!-- 활동 기록 -->
+    <section id="actBox" class="p-5">
+      <div class="flex items-baseline gap-2 mb-3">
+        <h2 class="text-sm font-extrabold">활동 기록</h2>
+        <span id="aLimit">최근 순</span>
+      </div>
+      <ol id="acts" class="space-y-2.5"></ol>
+      <div id="aEmpty" class="hidden px-4 py-8 text-center"></div>
+    </section>
+  </div>
+</main>
+
+<script src="js/app.js"></script>
+<script src="js/team.js"></script>
+</body>
+</html>

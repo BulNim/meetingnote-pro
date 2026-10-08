@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MeetingNote Pro - 회의록 상세</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="theme.js"></script>
+</head>
+
+<body class="bg-page dark:bg-canvas text-ink dark:text-fg font-sans antialiased min-h-screen flex flex-col">
+
+<div id="header"></div>
+
+<main class="flex-1 w-full max-w-6xl mx-auto px-4 py-5 space-y-4">
+
+  <div id="missing" class="hidden"></div>
+
+  <div id="content" class="space-y-4">
+    <!-- 머리 -->
+    <section id="head" class="p-5">
+      <div class="flex flex-wrap items-start gap-3">
+        <div class="flex-1 min-w-[240px]">
+          <h1 id="title" class="text-lg font-extrabold leading-snug"></h1>
+          <p id="metaLine" class="mt-1"></p>
+        </div>
+        <div id="actions" class="hidden gap-2">
+          <button id="editBtn" type="button">수정</button>
+          <button id="delBtn" type="button">삭제</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 수정 -->
+    <section id="editPanel" class="hidden p-5">
+      <h2 class="text-sm font-extrabold mb-3">회의록 수정</h2>
+      <div class="grid gap-3 sm:grid-cols-2">
+        <div>
+          <label for="eTitle" class="block text-xs font-bold mb-1.5">제목</label>
+          <input id="eTitle">
+        </div>
+        <div>
+          <label for="eAt" class="block text-xs font-bold mb-1.5">회의 시각</label>
+          <input id="eAt" type="datetime-local">
+        </div>
+        <div class="sm:col-span-2">
+          <label for="eWho" class="block text-xs font-bold mb-1.5">참석자</label>
+          <input id="eWho">
+        </div>
+        <div class="sm:col-span-2">
+          <label for="eBody" class="block text-xs font-bold mb-1.5">받아쓴 본문</label>
+          <textarea id="eBody" rows="6"></textarea>
+        </div>
+      </div>
+      <div id="editErr" class="hidden mt-2.5"></div>
+      <div class="mt-3 flex gap-2.5 justify-end">
+        <button id="editCancel" type="button">취소</button>
+        <button id="editSave" type="button">저장</button>
+      </div>
+      <p id="editHelp" class="mt-2.5"></p>
+    </section>
+
+    <!-- 삭제 확인 -->
+    <section id="delConfirm" class="hidden p-5">
+      <p id="delTitle" class="text-[13px] font-bold">이 회의록을 삭제</p>
+      <p id="delSub" class="mt-1"></p>
+      <div class="mt-3 flex gap-2.5">
+        <button id="delNo" type="button">취소</button>
+        <button id="delYes" type="button">삭제</button>
+      </div>
+    </section>
+
+    <!-- 세 항목 -->
+    <div class="grid gap-3 lg:grid-cols-3">
+      <section id="boxSummary" class="p-5">
+        <div class="flex items-baseline gap-2 mb-2.5">
+          <h2 id="hSummary" class="text-sm font-extrabold">요약</h2>
+          <span id="tSummary">3~5줄</span>
+        </div>
+        <p id="summary" class="text-[13px] leading-relaxed whitespace-pre-line"></p>
+      </section>
+
+      <section id="boxDecisions" class="p-5">
+        <div class="flex items-baseline gap-2 mb-2.5">
+          <h2 id="hDecisions" class="text-sm font-extrabold">결정사항</h2>
+          <span id="tDecisions">합의가 끝난 것만</span>
+        </div>
+        <ul id="decisions" class="space-y-2 text-[13px] leading-relaxed"></ul>
+      </section>
+
+      <section id="boxTodos" class="p-5">
+        <div class="flex items-baseline gap-2 mb-2.5">
+          <h2 id="hTodos" class="text-sm font-extrabold">할 일</h2>
+          <span id="tTodos">담당자 · 기한</span>
+        </div>
+        <ul id="todos" class="space-y-2.5"></ul>
+      </section>
+    </div>
+
+    <!-- 본문 -->
+    <section id="boxBody" class="p-5">
+      <button id="bodyToggle" type="button" class="flex items-center gap-2 text-sm font-extrabold">
+        <span>받아쓴 본문</span>
+        <span id="bodyState">펼치기</span>
+      </button>
+      <pre id="body" class="hidden mt-3 text-[12px] leading-relaxed whitespace-pre-wrap font-sans"></pre>
+    </section>
+
+    <!-- 댓글 -->
+    <section id="boxComments" class="p-5">
+      <div class="flex items-baseline gap-2 mb-3">
+        <h2 id="hComments" class="text-sm font-extrabold">댓글</h2>
+        <span id="cCount"></span>
+        <span id="cLimit" class="ml-auto">500자 이내</span>
+      </div>
+      <ul id="comments" class="space-y-2.5 mb-3"></ul>
+      <div id="cEmpty" class="hidden mb-3">아직 댓글이 없음  -  결정에 의견이 있으면 여기에</div>
+      <div class="flex gap-2.5">
+        <input id="cInput" class="flex-1" maxlength="500" placeholder="이 회의에 대한 의견">
+        <button id="cBtn" type="button">등록</button>
+      </div>
+      <div id="cErr" class="hidden mt-2.5"></div>
+    </section>
+  </div>
+</main>
+
+<script src="js/app.js"></script>
+<script src="js/detail.js"></script>
+</body>
+</html>

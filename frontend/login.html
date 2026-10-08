@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MeetingNote Pro - 로그인 / 회원가입</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="theme.js"></script>
+</head>
+
+<body class="bg-page dark:bg-canvas text-ink dark:text-fg font-sans antialiased min-h-screen flex flex-col">
+
+<div class="absolute top-3 right-4 z-40" id="themeSlot"></div>
+
+<main class="flex-1 grid place-items-center px-5 py-10">
+  <div class="w-full max-w-[380px]">
+
+    <div class="flex items-center justify-center gap-2 mb-7">
+      <div class="w-9 h-9 rounded-xl bg-ink dark:bg-fg grid place-items-center text-white dark:text-canvas font-extrabold">M</div>
+      <span class="text-xl font-extrabold tracking-tight">MeetingNote</span>
+    </div>
+
+    <div class="rounded-2xl bg-white dark:bg-surface border border-line dark:border-edge p-6 sm:p-7">
+      <!-- 세션 만료 (B-03) -->
+      <div id="boxExpired" class="hidden mb-5"></div>
+
+      <h1 id="title" class="text-lg font-extrabold mb-1">로그인</h1>
+      <p id="sub" class="text-[13px] text-ink-2 dark:text-dim mb-6">회의록과 할 일을 팀이 함께 관리</p>
+
+      <form id="form" class="space-y-4" novalidate>
+        <div>
+          <label for="email" class="block text-xs font-bold mb-1.5">이메일</label>
+          <input id="email" type="email" autocomplete="email" placeholder="user@example.com">
+          <p id="errEmail" class="hidden"></p>
+        </div>
+
+        <div>
+          <label for="pw" class="block text-xs font-bold mb-1.5">비밀번호</label>
+          <input id="pw" type="password" autocomplete="current-password" placeholder="8자 이상">
+          <p id="errPw" class="hidden"></p>
+        </div>
+
+        <!-- 이름 - 회원가입에서만 표시 -->
+        <div id="nameWrap" class="hidden">
+          <label for="uname" class="block text-xs font-bold mb-1.5">이름</label>
+          <input id="uname" type="text" autocomplete="name" placeholder="홍길동">
+          <p id="errName" class="hidden"></p>
+        </div>
+
+        <!-- 초대코드 - 회원가입에서만 표시 -->
+        <div id="inviteWrap" class="hidden">
+          <label for="invite" class="block text-xs font-bold mb-1.5">초대코드 <span class="font-normal text-ink-3 dark:text-dim">(선택)</span></label>
+          <input id="invite" type="text" placeholder="MN-7K2D" autocomplete="off">
+          <p id="errInvite" class="hidden"></p>
+          <p id="inviteHelp"></p>
+        </div>
+
+        <!-- 폼 전체 오류 / 성공 -->
+        <div id="boxErr" class="hidden"></div>
+        <div id="boxOk" class="hidden"></div>
+
+        <button id="submit" type="submit">로그인</button>
+      </form>
+
+      <p id="switch" class="mt-5 text-center text-[13px] text-ink-2 dark:text-dim"></p>
+    </div>
+  </div>
+</main>
+
+<script src="js/app.js"></script>
+<script src="js/login.js"></script>
+</body>
+</html>

@@ -1,2 +1,19 @@
 # todo-guard 세션 기록
 .claude/todo-guard/
+
+# 키 파일 - 공개 저장소에 올리지 않는다
+.env
+
+# 로컬 개발 산출물
+.venv/
+__pycache__/
+.pytest_cache/
+meetingnote.db
+*.pyc
+
+# 녹취 파일은 공개 저장소에 올리지 않는다
+*.wav
+*.mp3
+.vercel
+.env*
+!.env.example
