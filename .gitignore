@@ -5,3 +5,6 @@ __pycache__/
 회의_녹음.wav
 .claude/todo-guard/
 .claude/settings.local.json
+.venv/
+backend/.jwt_secret
+server.log

@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MeetingNote Pro</title>
+<script src="api.js"></script>
+</head>
+<body class="bg-page">
+<script>
+  // 진입점 - 로그인한 사람은 회의록, 아니면 로그인 화면
+  location.replace(API.token() ? "meetings.html" : "login.html");
+</script>
+</body>
+</html>
