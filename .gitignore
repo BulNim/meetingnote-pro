@@ -1,0 +1,7 @@
+.env
+*.db
+__pycache__/
+.pytest_cache/
+회의_녹음.wav
+.claude/todo-guard/
+.claude/settings.local.json
