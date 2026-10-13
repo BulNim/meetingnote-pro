@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from . import config, errors
-from .db import init_db
+from .db import init_db, using_postgres
 from .routers import activity, auth, comment, meeting, team, todo
 
 TAGS = [
@@ -21,7 +21,8 @@ TAGS = [
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
-    init_db()
+    if not using_postgres():   # 로컬 SQLite 는 자동으로 만들고, Postgres(Neon)는 backend/migrate.py 로 만든다
+        init_db()
     yield
 
 

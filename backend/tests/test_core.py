@@ -51,3 +51,9 @@ def test_위조된_토큰은_TOKEN_EXPIRED():
 def test_토큰_없이_부르면_401(client):
     r = client.get("/api/auth/me")
     assert r.status_code == 401 and r.json()["code"] == "TOKEN_EXPIRED"
+
+
+def test_Neon_주소는_psycopg_드라이버_주소로_바뀐다():
+    assert dbmod.normalize_url("postgresql://u:p@h/db?sslmode=require") == "postgresql+psycopg://u:p@h/db?sslmode=require"
+    assert dbmod.normalize_url("postgres://u:p@h/db") == "postgresql+psycopg://u:p@h/db"
+    assert dbmod.normalize_url("sqlite:///x.db") == "sqlite:///x.db"

@@ -3,6 +3,7 @@ import os
 
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import DeclarativeBase, sessionmaker
+from sqlalchemy.pool import NullPool
 
 from .config import ROOT
 
@@ -11,12 +12,23 @@ class Base(DeclarativeBase):
     pass
 
 
+def normalize_url(url: str) -> str:
+    """Neon 이 주는 postgresql:// 주소를 psycopg(3) 드라이버로 연결되는 형태로 바꾼다"""
+    for prefix in ("postgres://", "postgresql://"):
+        if url.startswith(prefix):
+            return "postgresql+psycopg://" + url[len(prefix):]
+    return url
+
+
+def using_postgres() -> bool:
+    return bool(os.environ.get("DATABASE_URL"))
+
+
 def make_engine(url: str | None = None):
     url = url or os.environ.get("DATABASE_URL")
     if url:
-        if url.startswith("postgres://"):
-            url = url.replace("postgres://", "postgresql+psycopg://", 1)
-        return create_engine(url, pool_pre_ping=True)
+        # 서버리스는 요청마다 새 환경이라 연결을 붙들어 두지 않는다 (Neon 풀러가 연결을 모아 준다)
+        return create_engine(normalize_url(url), poolclass=NullPool)
     engine = create_engine(
         f"sqlite:///{ROOT / 'meetingnote.db'}", connect_args={"check_same_thread": False}
     )

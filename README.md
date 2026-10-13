@@ -10,7 +10,8 @@
 | 프론트 | Vanilla JS · Tailwind CDN · 화면 6종 |
 | 인증 | JWT(24시간) + bcrypt 해시 |
 | 받아쓰기 | Gemini (오디오 → 전문 → 요약·결정사항·할 일 구분) |
-| 테스트 | pytest 89개 + Playwright 화면 시험 |
+| 테스트 | pytest 90개 + Playwright 화면 시험 |
+| 배포 | Vercel + Neon Postgres — https://meetingnote-pro-blush.vercel.app |
 
 ---
 
@@ -207,7 +208,7 @@ python -m venv .venv
 | `GEMINI_API_KEY` | 받아쓰기에 필요 | Gemini API 키 |
 | `GEMINI_MODEL` | 받아쓰기에 필요 | 사용할 모델 이름 |
 | `JWT_SECRET` | 선택 | 없으면 처음 한 번 무작위로 만들어 `backend/.jwt_secret` 에 보관 |
-| `DATABASE_URL` | 선택 | 있으면 Postgres, 없으면 로컬 SQLite(`meetingnote.db`) |
+| `DATABASE_URL` | 선택 | 있으면 Postgres(Neon), 없으면 로컬 SQLite(`meetingnote.db`) |
 | `BCRYPT_ROUNDS` | 선택 | 기본 11 (로그인 250ms 이내 기준으로 정한 값) |
 | `ENABLE_DOCS` | 선택 | `0` 이면 `/docs` 를 끔 |
 
@@ -230,7 +231,7 @@ cd backend
 .venv\Scripts\python -m pytest
 ```
 
-현재 **89개 통과**입니다.
+현재 **90개 통과**입니다.
 
 | 파일 | 다루는 것 |
 |---|---|
@@ -246,17 +247,47 @@ cd backend
 
 ---
 
-## 7. 폴더 구조
+## 7. 배포 (Vercel + Neon)
+
+**https://meetingnote-pro-blush.vercel.app** — 화면은 `/`, Swagger UI 는 `/docs` 입니다. 로컬과 같은 코드 한 벌이고, `DATABASE_URL` 이 있으면 Neon Postgres 로 연결됩니다.
+
+| 구성 | 내용 |
+|---|---|
+| 함수 | `api/index.py` 가 `backend/app` 의 FastAPI 앱을 노출하고, `vercel.json` 의 rewrite 가 모든 경로(화면 · API)를 이 함수로 보냅니다. 화면(`frontend/`)도 같은 함수가 정적으로 내보냅니다 |
+| 제한 시간 | 함수 최대 60초 (받아쓰기 2단계가 한 요청 안에서 끝나야 함) |
+| DB | Vercel Storage 의 Neon Postgres. 풀러 주소(`DATABASE_URL`)를 쓰고, 서버리스라 연결 풀은 끕니다(`NullPool`) |
+| 환경변수 | Neon 연동이 `DATABASE_URL` 등을 자동 등록하고, `JWT_SECRET` · `GEMINI_API_KEY` · `GEMINI_MODEL` 은 Sensitive 로 직접 등록했습니다 |
+| 제외 파일 | `.vercelignore` 가 테스트 · 문서 · `.venv` · `.env*` 를 배포에서 뺍니다 |
+
+**마이그레이션** — Postgres 에서는 앱이 시작할 때 테이블을 만들지 않고 `backend/migrate.py` 로 만듭니다(직접 연결 주소 `DATABASE_URL_UNPOOLED` 사용, 반복 실행해도 안전).
+
+```powershell
+vercel env pull .env.local          # Neon 접속 정보를 .env.local 로 (gitignore 됨)
+cd backend
+.venv\Scripts\python migrate.py            # 없는 테이블만 만든다
+.venv\Scripts\python migrate.py --reset    # 모두 지우고 다시 만든다 (데이터가 사라짐)
+```
+
+**다시 배포하려면** 프로젝트 루트에서 `vercel deploy --prod` 를 실행합니다.
+
+> **업로드 용량:** Vercel 함수는 요청 본문이 약 4.5MB 로 제한되어, 배포 환경에서는 스펙의 25MB 가 아니라 **약 4.5MB 이하**의 녹취만 받아쓸 수 있습니다(데모 녹음 4.4MB 는 통과). 한도를 넘으면 플랫폼이 413 을 돌려주고 화면은 용량 초과로 안내합니다. 25MB 를 받으려면 파일을 스토리지에 직접 올리는 구조가 필요하며 이번 범위 밖입니다.
+
+---
+
+## 8. 폴더 구조
 
 ```
+api/index.py           Vercel 진입점
+vercel.json · .vercelignore · requirements.txt   배포 설정 (requirements.txt 는 배포용, 개발용은 backend/requirements.txt)
 backend/
+  migrate.py           Neon 스키마 마이그레이션
   app/
     main.py            앱 진입점 · Swagger · 정적 화면 제공
     config.py · db.py · models.py   설정 · DB 분기 · 7테이블
     errors.py · security.py · deps.py   오류 형식 · bcrypt/JWT · 인증 의존성
     transcriber.py     Gemini 받아쓰기 2단계 (테스트에서 바꿔 끼우는 지점)
     routers/           auth · team · meeting · todo · comment · activity
-  tests/               pytest 89개
+  tests/               pytest 90개
 frontend/              화면 6종 + theme.js(디자인 규칙) + api.js(공통 fetch)
 publish/               확정된 퍼블리싱 원본 (수정하지 않음)
 docs/                  프로그램 정의서 · 스토리보드 · 디자인 시스템(PDF), screenshots/
@@ -267,7 +298,7 @@ openspec/
 
 ---
 
-## 8. 스펙과 결정 기록
+## 9. 스펙과 결정 기록
 
 이 프로젝트는 OpenSpec 으로 진행했습니다. 정의서 · 스토리보드 · 디자인 시스템을 `proposal → specs → design → tasks` 로 풀고(`add-mvp-core`, 28개 작업 모두 완료) 아카이브하여 주 스펙 6개로 남겼습니다. 각 요구사항 첫 줄의 주석에 근거 스토리보드 ID 와 퍼블리싱 파일이 적혀 있습니다.
 
@@ -286,8 +317,7 @@ openspec/
 
 실시간 녹음 · 화자 자동 구분 · 외부 연동(캘린더 · 메일) · owner/member 외 권한 등급 · 분할 업로드(25MB 초과) · 푸시 알림.
 
-### 아직 하지 않은 것
+### 알려진 한계
 
-- **배포(Vercel + Neon):** `DATABASE_URL` 분기 코드만 있고 배포 설정(진입점 · Postgres 드라이버 · 환경변수)과 실제 배포는 하지 않았습니다. Vercel 은 요청 본문 크기 제한이 있어 25MB 업로드를 그대로 받을 수 있는지 배포 전에 확인해야 합니다.
 - **기한 수정:** 할 일의 `due_text` 는 회의록 저장 때 정해지고, 이후 화면에서 고치는 API 는 없습니다(스펙에 없음).
 - 할 일 칸반의 담당자 배지는 눌러서 다음 멤버로 돌리는 방식입니다(확정 디자인의 조작 방식).

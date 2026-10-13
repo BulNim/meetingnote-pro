@@ -202,7 +202,7 @@
     if (!r.ok) {
       $("progWrap").classList.add("hidden");
       const code = r.data && r.data.code;
-      if (code === "PAYLOAD_TOO_LARGE") return showErr("red", "25MB 를 넘는 파일", "413 PAYLOAD_TOO_LARGE");
+      if (code === "PAYLOAD_TOO_LARGE" || r.status === 413) return showErr("red", "25MB 를 넘는 파일", "413 PAYLOAD_TOO_LARGE");
       if (code === "UNSUPPORTED_MEDIA_TYPE") return showErr("red", "mp3 또는 wav 만 올릴 수 있음", "415 UNSUPPORTED_MEDIA_TYPE");
       return showErr("red", "받아쓰기에 실패함", (r.data && r.data.msg) || "잠시 뒤 다시 시도");
     }

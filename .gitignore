@@ -8,3 +8,6 @@ __pycache__/
 .venv/
 backend/.jwt_secret
 server.log
+
+.vercel
+.env*
