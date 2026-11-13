@@ -84,4 +84,5 @@ else
   for ((i=1; i<${#items[@]}; i++)); do detail="$detail, ${items[$i]}"; done
 fi
 
-echo "📐 OpenSpec 단계: ${phase^^}  |  $bar  |  $detail"
+# 터미널 마크다운에는 글자색이 없어 빨강은 🔴 로 낸다
+echo "🔴🔴 OpenSpec 단계: ${phase^^} 🔴🔴  |  $bar  |  $detail"
