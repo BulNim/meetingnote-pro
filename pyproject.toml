@@ -1,0 +1,22 @@
+[project]
+name = "meetingnote-pro"
+version = "0.1.0"
+description = "로그인한 팀이 함께 쓰는 회의록 - 받아쓰기 · 요약 · 결정사항 · 할 일 칸반"
+requires-python = ">=3.12"
+dependencies = [
+  "fastapi>=0.115",
+  "uvicorn>=0.30",
+  "sqlalchemy>=2.0",
+  "psycopg[binary]>=3.2",
+  "pyjwt>=2.9",
+  "bcrypt>=4.2",
+  "python-multipart>=0.0.9",
+  "python-dotenv>=1.0",
+  "google-genai>=1.0",
+]
+
+[tool.vercel]
+entrypoint = "backend.main:app"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
