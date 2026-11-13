@@ -274,6 +274,7 @@
         </span>
         <input data-i="${i}" value="${esc(t.due_text)}" placeholder="미정" aria-label="기한"
           class="due w-28 px-2 py-1 rounded-md bg-white dark:bg-surface border border-line dark:border-edge text-[11px] font-bold text-ink-2 dark:text-dim focus:outline-none focus:border-blue-dot transition">
+        ${window.dueDateText(t) ? `<span class="text-[11px] font-bold ${window.isOverdue(t) ? "text-red-text dark:text-red-dot" : "text-ink-2 dark:text-dim"}">${esc(window.dueDateText(t))}</span>` : ""}
         <span class="relative ml-auto">
           <button type="button" data-open="status" data-i="${i}" aria-label="상태"
             class="px-2 py-1 rounded-md bg-white dark:bg-surface border text-[11px] font-extrabold ${window.LABEL[st.color]} transition

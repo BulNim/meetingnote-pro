@@ -118,7 +118,6 @@
     {key:"DOING", label:"진행", color:"blue"},
     {key:"DONE",  label:"완료", color:"green"}
   ];
-  const LATE = ["어제", "지난 주", "지난 달"];
   const colLabel = (k) => COLS.find(c => c.key === k).label;
 
   // 삭제 확인 팝업 - theme.js 의 공통 팝업 클래스
@@ -130,7 +129,7 @@
   let ME = null, TEAM = null, MEMBERS = [];
   let DATA = [], mine = true, dragId = null, overCol = null, menuId = null, delId = null;
 
-  const isLate = (t) => LATE.includes(t.due_text) && t.status !== "DONE";
+  const isLate = (t) => window.isOverdue(t);  // 기한 날짜가 오늘보다 앞 · 미완료
   const whoName = (t) => t.assignee_name || "미정";
   const fail = (title, e) => window.toast("red", esc(title || e.msg), e.status ? esc(e.status + " " + e.code) : esc(e.msg));
 
@@ -152,7 +151,7 @@
           </div>` : ""}
         </span>
         <button type="button" data-act="due" data-id="${t.id}"
-          class="px-2 py-0.5 rounded-md text-[10px] font-bold ${isLate(t) ? "text-red-text dark:text-red-dot" : "text-ink-2 dark:text-dim"} bg-page dark:bg-chip hover:ring-1 hover:ring-ink-3 transition">${esc(t.due_text || "미정")}</button>
+          class="px-2 py-0.5 rounded-md text-[10px] font-bold ${isLate(t) ? "text-red-text dark:text-red-dot" : "text-ink-2 dark:text-dim"} bg-page dark:bg-chip hover:ring-1 hover:ring-ink-3 transition" title="${esc(t.due_text || "")}">${window.dueHtml(t)}</button>
         <button type="button" data-act="del" data-id="${t.id}" ${t.can_delete ? "" : "disabled"}
           class="ml-auto px-2 py-0.5 rounded-md text-[10px] font-bold bg-page dark:bg-chip transition ${t.can_delete ? "text-red-text dark:text-red-dot hover:ring-1 hover:ring-red-dot" : "text-ink-3 dark:text-dim opacity-40 cursor-not-allowed"}">삭제</button>
       </div>

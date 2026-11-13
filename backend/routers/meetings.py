@@ -6,7 +6,7 @@ from pydantic import BaseModel
 from sqlalchemy import delete, or_, select
 from sqlalchemy.orm import Session
 
-from .. import activity, config, gemini
+from .. import activity, config, duedate, gemini
 from ..db import get_db
 from ..errors import AppError, forbidden, validation
 from ..models import Comment, Meeting, Membership, Todo, User
@@ -119,7 +119,9 @@ def create_meeting(team_id: int, data: MeetingIn, user: User = Depends(current_u
         if not what:
             continue
         hit = by_name.get(gemini.normalize_name(item.assignee)) if item.assignee else None
-        t = Todo(team_id=team_id, meeting_id=m.id, what=what, due_text=item.due.strip(),
+        due = item.due.strip()
+        t = Todo(team_id=team_id, meeting_id=m.id, what=what, due_text=due,
+                 due_date=duedate.resolve(due, duedate.kst_date(met_at)),
                  assignee_id=hit[0] if hit else None, author_id=user.id)
         db.add(t)
         if hit:
@@ -141,7 +143,12 @@ def edit_meeting(meeting_id: int, data: MeetingEdit, user: User = Depends(curren
     if data.title is not None:
         m.title = required(data.title, "제목")
     if data.met_at is not None:
-        m.met_at = parse_when(required(data.met_at, "회의 시각"))
+        new_at = parse_when(required(data.met_at, "회의 시각"))
+        if new_at != m.met_at:  # 회의 날짜가 바뀌면 딸린 할 일 기한을 새 기준일로 다시 환산
+            m.met_at = new_at
+            base = duedate.kst_date(new_at)
+            for t in db.scalars(select(Todo).where(Todo.meeting_id == m.id)):
+                t.due_date = duedate.resolve(t.due_text, base)
     if data.attendees is not None:
         m.attendees = data.attendees.strip()
     if data.body is not None:

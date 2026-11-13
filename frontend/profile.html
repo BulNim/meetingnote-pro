@@ -124,7 +124,7 @@
       <li class="rounded-xl bg-page dark:bg-chip border border-line dark:border-edge ${window.STRIPE[st.color]} px-3.5 py-2.5">
         <p class="text-[13px] font-bold">${esc(t.what)}</p>
         <div class="mt-1 flex gap-1.5">
-          <span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-white dark:bg-surface text-ink-2 dark:text-dim">${esc(t.due_text || "미정")}</span>
+          <span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-white dark:bg-surface ${window.isOverdue(t) ? "text-red-text dark:text-red-dot" : "text-ink-2 dark:text-dim"}">${window.dueHtml(t)}</span>
           <span class="px-2 py-0.5 rounded-md text-[10px] font-extrabold ${window.LABEL[st.color]} bg-white dark:bg-surface">${st.label}</span>
           <span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-white dark:bg-surface text-ink-2 dark:text-dim">${esc(t.meeting_title || "직접 등록")}</span>
         </div>

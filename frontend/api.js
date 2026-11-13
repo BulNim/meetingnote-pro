@@ -140,6 +140,25 @@
     return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
   };
 
+  // ── 할 일 기한 (modify-todo-due-date) ──
+  // due_date(YYYY-MM-DD) 는 서버가 회의 날짜 기준으로 환산한 날짜. 못 정하면 null 이고 원래 글자 due_text 만 있다
+  const WEEK = "일월화수목금토";
+  const todayStr = () => { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; };
+  // "11-20 (금)" - 날짜가 없으면 빈 문자열
+  window.dueDateText = function (t) {
+    if (!t || !t.due_date) return "";
+    const [y, m, d] = t.due_date.split("-").map(Number);
+    return `${pad(m)}-${pad(d)} (${WEEK[new Date(y, m - 1, d).getDay()]})`;
+  };
+  // 기한 지남 - 날짜가 오늘보다 앞이고 완료가 아님. 날짜가 없으면 판정하지 않음
+  window.isOverdue = (t) => !!(t && t.due_date && t.status !== "DONE" && t.due_date < todayStr());
+  // 기한 배지 안쪽 HTML - 날짜 + 원래 글자, 날짜가 없으면 글자만 (둘 다 없으면 「미정」)
+  window.dueHtml = function (t) {
+    const dt = window.dueDateText(t);
+    if (!dt) return window.esc(t.due_text || "미정");
+    return window.esc(dt) + (t.due_text ? `<span class="font-normal text-ink-3 dark:text-dim"> · ${window.esc(t.due_text)}</span>` : "");
+  };
+
   // 팔레트 순환 - 회의록 카드 띠 (목록 순서대로)
   window.CYCLE = ["blue", "green", "orange", "purple", "red"];
   // 활동 kind -> 띠 색

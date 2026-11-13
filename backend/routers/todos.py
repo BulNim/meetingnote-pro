@@ -4,10 +4,10 @@ from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from .. import activity
+from .. import activity, duedate
 from ..db import get_db
 from ..errors import forbidden, not_found, validation
-from ..models import Membership, Todo, User
+from ..models import Meeting, Membership, Todo, User, utcnow
 from ..security import current_user, membership_of, require_member
 from ..serial import STATUS_ORDER, can_delete_todo, sort_todos, todo_out
 
@@ -44,7 +44,7 @@ def visible_todo(db: Session, user: User, todo_id: int) -> Todo:
     return t
 
 
-@router.get("/api/teams/{team_id}/todos", summary="팀 할 일 - status 다음 due_text 순")
+@router.get("/api/teams/{team_id}/todos", summary="팀 할 일 - status 다음 due_date 순 (날짜 없는 것은 뒤)")
 def team_todos(team_id: int, user: User = Depends(current_user), db: Session = Depends(get_db)):
     require_member(db, user, team_id)
     rows = db.scalars(select(Todo).where(Todo.team_id == team_id)).all()
@@ -58,7 +58,9 @@ def create_todo(team_id: int, data: TodoIn, user: User = Depends(current_user), 
     if not what:
         raise validation("내용 필수")
     assignee = check_assignee(db, team_id, data.assignee_id)
-    t = Todo(team_id=team_id, meeting_id=None, what=what, due_text=(data.due_text or "").strip(),
+    due, now = (data.due_text or "").strip(), utcnow()
+    t = Todo(team_id=team_id, meeting_id=None, what=what, due_text=due, created_at=now,
+             due_date=duedate.resolve(due, duedate.base_date(now, None)),
              assignee_id=data.assignee_id, author_id=user.id)
     db.add(t)
     if assignee:
@@ -84,6 +86,8 @@ def edit_todo(todo_id: int, data: TodoEdit, user: User = Depends(current_user), 
         t.assignee_id = data.assignee_id
     if "due_text" in sent:
         t.due_text = (data.due_text or "").strip()
+        meeting = db.get(Meeting, t.meeting_id) if t.meeting_id else None
+        t.due_date = duedate.resolve(t.due_text, duedate.base_date(t.created_at, meeting.met_at if meeting else None))
     db.commit()
     return todo_out(db, t, user)
 

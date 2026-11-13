@@ -76,14 +76,14 @@ def todo_out(db: Session, t: Todo, me: User) -> dict:
     meeting = db.get(Meeting, t.meeting_id) if t.meeting_id else None
     return {"id": t.id, "what": t.what, "assignee_id": t.assignee_id,
             "assignee_name": assignee.name if assignee else None,
-            "due_text": t.due_text, "status": t.status, "meeting_id": t.meeting_id,
+            "due_text": t.due_text, "due_date": t.due_date.isoformat() if t.due_date else None, "status": t.status, "meeting_id": t.meeting_id,
             "meeting_title": meeting.title if meeting else None,
             "can_delete": can_delete_todo(db, me, t)}
 
 
 def sort_todos(items: list[dict]) -> list[dict]:
-    """status 다음 due_text. 기한 없는 것은 뒤로."""
-    return sorted(items, key=lambda x: (STATUS_ORDER.get(x["status"], 9), x["due_text"] == "", x["due_text"], x["id"]))
+    """status 다음 due_date. 날짜를 정하지 못한 것은 각 상태의 뒤로."""
+    return sorted(items, key=lambda x: (STATUS_ORDER.get(x["status"], 9), x["due_date"] is None, x["due_date"] or "", x["id"]))
 
 
 # ── 댓글 · 활동 ──

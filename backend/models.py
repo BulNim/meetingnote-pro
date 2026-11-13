@@ -1,7 +1,7 @@
 """DB 7테이블 - 정의서 6 의 칼럼대로."""
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, UniqueConstraint
+from sqlalchemy import Date, DateTime, ForeignKey, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from .db import Base
@@ -60,7 +60,8 @@ class Todo(Base):
     team_id: Mapped[int] = mapped_column(ForeignKey("teams.id"), index=True)
     meeting_id: Mapped[int | None] = mapped_column(ForeignKey("meetings.id"), nullable=True)  # 직접 등록은 null
     what: Mapped[str] = mapped_column(String(500))
-    due_text: Mapped[str] = mapped_column(String(100), default="")
+    due_text: Mapped[str] = mapped_column(String(100), default="")  # 받아쓴 기한 글자 그대로
+    due_date: Mapped[date | None] = mapped_column(Date, nullable=True)  # 기준일에서 환산한 날짜 (못 정하면 null)
     status: Mapped[str] = mapped_column(String(10), default="OPEN")  # OPEN | DOING | DONE
     assignee_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
     author_id: Mapped[int] = mapped_column(ForeignKey("users.id"))

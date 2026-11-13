@@ -6,7 +6,7 @@ def test_direct_create_and_fields(client, team):
     r = owner.post(f"/api/teams/{owner.team_id}/todos", json={"what": "인터뷰", "assignee_id": park.id, "due_text": "금요일"})
     assert r.status_code == 201
     t = r.json()
-    assert set(t) == {"id", "what", "assignee_id", "assignee_name", "due_text", "status",
+    assert set(t) == {"id", "what", "assignee_id", "assignee_name", "due_text", "due_date", "status",
                       "meeting_id", "meeting_title", "can_delete"}
     assert t["status"] == "OPEN" and t["meeting_title"] is None and t["assignee_name"] == "박과장"
     assert [a["kind"] for a in owner.get("/api/me/activities").json()] == ["todo_assign"]
@@ -73,3 +73,53 @@ def test_sort_and_my_todos(client, team):
     assert [x["what"] for x in owner.get(f"/api/teams/{tid}/todos").json()] == ["b", "a", "c"]
     assert [x["id"] for x in park.get("/api/me/todos").json()] == [a["id"]]
     assert team["lee"].get("/api/me/todos").json() == []
+
+
+# ── modify-todo-due-date ──
+from datetime import datetime  # noqa: E402
+
+import backend.routers.todos as todos_router  # noqa: E402
+
+
+def fix_now(monkeypatch, iso):
+    """직접 등록의 기준일(등록 시각, UTC)을 고정한다."""
+    monkeypatch.setattr(todos_router, "utcnow", lambda: datetime.fromisoformat(iso))
+
+
+def test_direct_create_base_is_registration_day(client, team, monkeypatch):
+    owner = team["owner"]
+    fix_now(monkeypatch, "2026-11-13T03:00:00")  # 한국 11-13(금) 12:00
+    t = owner.post(f"/api/teams/{owner.team_id}/todos", json={"what": "a", "due_text": "다음 주까지"}).json()
+    assert t["due_text"] == "다음 주까지" and t["due_date"] == "2026-11-20"
+    fix_now(monkeypatch, "2026-11-12T16:00:00")  # UTC 11-12 16:00 = 한국 11-13 01:00
+    t = owner.post(f"/api/teams/{owner.team_id}/todos", json={"what": "b", "due_text": "내일"}).json()
+    assert t["due_date"] == "2026-11-14"
+    t = owner.post(f"/api/teams/{owner.team_id}/todos", json={"what": "c", "due_text": "이번 주 안"}).json()
+    assert t["due_date"] is None and t["due_text"] == "이번 주 안"
+
+
+def test_edit_due_text_recomputes(client, team, monkeypatch):
+    owner = team["owner"]
+    fix_now(monkeypatch, "2026-11-12T03:00:00")  # 한국 11-12(목)
+    t = owner.post(f"/api/teams/{owner.team_id}/todos", json={"what": "a", "due_text": "내일"}).json()
+    assert t["due_date"] == "2026-11-13"
+    fix_now(monkeypatch, "2026-11-20T03:00:00")  # 고치는 날은 기준일이 아님 - 등록일 그대로
+    r = owner.put(f"/api/todos/{t['id']}", json={"due_text": "다음 주 월요일"}).json()
+    assert r["due_text"] == "다음 주 월요일" and r["due_date"] == "2026-11-16"
+    r = owner.put(f"/api/todos/{t['id']}", json={"due_text": ""}).json()
+    assert r["due_text"] == "" and r["due_date"] is None
+    r = owner.put(f"/api/todos/{t['id']}", json={"status": "DOING"}).json()  # 상태만 바꾸면 기한 그대로
+    assert r["due_date"] is None
+
+
+def test_sort_by_due_date(client, team, monkeypatch):
+    owner = team["owner"]
+    fix_now(monkeypatch, "2026-11-12T03:00:00")
+    tid = owner.team_id
+    for what, due in [("20일", "다음 주 금요일"), ("없음", "이번 주 안"), ("13일", "내일"), ("빈칸", "")]:
+        owner.post(f"/api/teams/{tid}/todos", json={"what": what, "due_text": due})
+    done = owner.post(f"/api/teams/{tid}/todos", json={"what": "완료", "due_text": "어제"}).json()
+    owner.put(f"/api/todos/{done['id']}", json={"status": "DONE"})
+    rows = owner.get(f"/api/teams/{tid}/todos").json()
+    assert [x["what"] for x in rows] == ["13일", "20일", "없음", "빈칸", "완료"]
+    assert [x["due_date"] for x in rows][:2] == ["2026-11-13", "2026-11-20"]

@@ -137,3 +137,27 @@ def test_other_team_meeting_is_404(client, team, fake):
     assert_error(other.get(f"/api/meetings/{m['id']}"), 404, "MEETING_NOT_FOUND")
     assert_error(other.get(f"/api/teams/{team['owner'].team_id}/meetings"), 403, "FORBIDDEN")
     assert_error(team["owner"].get("/api/meetings/99"), 404, "MEETING_NOT_FOUND")
+
+
+# ── modify-todo-due-date ──
+def test_save_resolves_due_from_meeting_day(client, team, fake):
+    owner = team["owner"]
+    fake.result = Classified(summary="s", decisions=[], todos=[
+        TodoItem(what="목록 정리", assignee="이주임", due="다음 주 금요일"),
+        TodoItem(what="조사", assignee="", due="내일"),
+        TodoItem(what="인터뷰", assignee="", due="이번 주 안"),
+    ])
+    m = owner.new_meeting(met_at="2026-11-11T23:30:00Z")  # 한국 11-12(목) 08:30
+    got = {t["what"]: (t["due_text"], t["due_date"]) for t in m["todos"]}
+    assert got == {"목록 정리": ("다음 주 금요일", "2026-11-20"), "조사": ("내일", "2026-11-13"), "인터뷰": ("이번 주 안", None)}
+
+
+def test_met_at_change_recomputes_due(client, team, fake):
+    owner = team["owner"]
+    fake.result = Classified(summary="s", decisions=[], todos=[TodoItem(what="일", due="내일")])
+    m = owner.new_meeting(met_at="2026-11-12T05:00:00Z")
+    assert m["todos"][0]["due_date"] == "2026-11-13"
+    r = owner.put(f"/api/meetings/{m['id']}", json={"title": "제목만"}).json()
+    assert r["todos"][0]["due_date"] == "2026-11-13"
+    r = owner.put(f"/api/meetings/{m['id']}", json={"met_at": "2026-11-19T05:00:00Z"}).json()
+    assert r["todos"][0]["due_date"] == "2026-11-20" and r["todos"][0]["due_text"] == "내일"
