@@ -1,0 +1,13 @@
+.agents/
+.claude/
+skills-lock.json
+.env
+.env.local
+.venv/
+docs/
+publish/
+tests/
+openspec/
+*.wav
+*.mp3
+meetingnote.db

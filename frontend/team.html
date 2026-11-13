@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MeetingNote Pro - 팀 설정</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="theme.js"></script>
+<script src="api.js"></script>
+</head>
+
+<body class="bg-page dark:bg-canvas text-ink dark:text-fg font-sans antialiased min-h-screen flex flex-col">
+
+<header class="sticky top-0 z-30 bg-white dark:bg-canvas border-b border-line dark:border-edge">
+  <div class="max-w-6xl mx-auto px-4 h-14 flex items-center gap-3">
+    <a href="meetings.html" data-needteam class="flex items-center gap-2 shrink-0">
+      <div class="w-7 h-7 rounded-lg bg-ink dark:bg-fg grid place-items-center text-white dark:text-canvas font-extrabold text-sm">M</div>
+      <span class="font-extrabold tracking-tight">MeetingNote Pro</span>
+    </a>
+    <nav class="flex items-center gap-1 text-[13px] font-bold ml-2 min-w-0 overflow-x-auto">
+      <a href="meetings.html" data-needteam class="px-2.5 py-1 rounded-lg whitespace-nowrap text-ink-2 dark:text-dim hover:bg-page dark:hover:bg-chip transition">회의록</a>
+      <a href="todos.html" data-needteam class="px-2.5 py-1 rounded-lg whitespace-nowrap text-ink-2 dark:text-dim hover:bg-page dark:hover:bg-chip transition">할 일</a>
+      <span class="px-2.5 py-1 rounded-lg whitespace-nowrap bg-page dark:bg-chip">팀</span>
+      <a href="profile.html" class="px-2.5 py-1 rounded-lg whitespace-nowrap text-ink-2 dark:text-dim hover:bg-page dark:hover:bg-chip transition">내 정보</a>
+    </nav>
+    <div class="ml-auto flex items-center gap-2">
+      <span id="viewer" class="hidden sm:inline text-[12px] text-ink-3 dark:text-dim"></span>
+      <div id="themeSlot"></div>
+    </div>
+  </div>
+</header>
+
+<main class="flex-1 w-full max-w-6xl mx-auto px-4 py-5 space-y-4">
+
+  <!-- 팀 만들기 / 합류 (소속 팀이 없을 때). 회의록 · 할 일 화면에 들어갈 수 없음 -->
+  <section id="onboard" class="hidden">
+    <p class="text-[12px] text-ink-3 dark:text-dim mb-3">소속 팀이 없어 회의록 · 할 일 화면에 들어갈 수 없음. 팀을 만들거나 초대코드로 합류</p>
+    <div class="grid gap-3 sm:grid-cols-2">
+      <div class="rounded-2xl bg-white dark:bg-surface border border-line dark:border-edge p-5">
+        <p class="text-[15px] font-extrabold">팀 만들기</p>
+        <p class="text-[12px] text-ink-3 dark:text-dim mt-0.5 mb-3">만든 사람이 owner</p>
+        <label class="block text-xs font-bold mb-1.5">팀 이름</label>
+        <input id="newName" class="w-full h-11 px-3.5 rounded-xl bg-page dark:bg-chip border border-line dark:border-edge text-sm focus:outline-none focus:border-blue-dot transition" placeholder="예: 기획팀">
+        <div class="mt-3 flex justify-end">
+          <button id="createBtn" class="h-11 px-5 rounded-xl bg-ink dark:bg-fg text-white dark:text-canvas text-sm font-bold hover:opacity-90 transition">만들기</button>
+        </div>
+      </div>
+      <div class="rounded-2xl bg-white dark:bg-surface border border-line dark:border-edge p-5">
+        <p class="text-[15px] font-extrabold">초대코드로 합류</p>
+        <p class="text-[12px] text-ink-3 dark:text-dim mt-0.5 mb-3">owner 에게 받은 코드 입력</p>
+        <label class="block text-xs font-bold mb-1.5">초대코드</label>
+        <input id="joinCode" class="w-full h-11 px-3.5 rounded-xl bg-page dark:bg-chip border border-line dark:border-edge text-sm font-mono tracking-widest focus:outline-none focus:border-blue-dot transition" placeholder="MN-7K2D">
+        <p id="joinErr" class="hidden mt-1.5 text-[11px] font-semibold text-red-text dark:text-red-dot"></p>
+        <div class="mt-3 flex justify-end">
+          <button id="joinBtn" class="h-11 px-5 rounded-xl bg-ink dark:bg-fg text-white dark:text-canvas text-sm font-bold hover:opacity-90 transition">합류</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 팀 정보 -->
+  <section id="info" class="hidden rounded-2xl bg-white dark:bg-surface border border-line dark:border-edge p-5">
+    <div class="flex flex-wrap items-start gap-4">
+      <div class="flex-1 min-w-[200px]">
+        <p id="nameLabel" class="text-[11px] font-bold text-ink-3 dark:text-dim mb-1">팀 이름</p>
+        <div class="flex gap-2">
+          <input id="tName" value=""
+            class="flex-1 min-w-0 h-11 px-3.5 rounded-xl bg-page dark:bg-chip border border-line dark:border-edge text-sm font-bold focus:outline-none focus:border-blue-dot transition">
+          <button id="saveName" type="button" class="h-11 px-4 rounded-xl bg-white dark:bg-chip border border-line dark:border-edge text-[13px] font-bold hover:border-ink dark:hover:border-dim transition">저장</button>
+        </div>
+      </div>
+      <div>
+        <p class="text-[11px] font-bold text-ink-3 dark:text-dim mb-1">초대코드  <span class="font-normal">팀당 코드 하나 · 정원 6명</span><span id="lockNote" class="hidden font-normal"> · 재발급은 owner 전용 - 잠김</span></p>
+        <div class="flex gap-2">
+          <div class="h-11 px-4 grid place-items-center rounded-xl bg-page dark:bg-chip border border-line dark:border-edge
+                      font-mono text-sm font-extrabold tracking-[0.2em]" id="code"></div>
+          <button id="copyBtn" class="h-11 px-3.5 rounded-xl bg-white dark:bg-chip border border-line dark:border-edge text-[13px] font-bold hover:border-ink dark:hover:border-dim transition">복사</button>
+          <button id="newCodeBtn" class="h-11 px-3.5 rounded-xl bg-white dark:bg-chip border border-line dark:border-edge text-[13px] font-bold hover:border-ink dark:hover:border-dim transition">재발급</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 멤버 -->
+  <section id="memSec" class="hidden rounded-2xl bg-white dark:bg-surface border border-line dark:border-edge p-5">
+    <div class="flex items-baseline gap-2 mb-3">
+      <h2 class="text-sm font-extrabold">멤버 <span id="mCap" class="text-ink-3 dark:text-dim font-bold"></span></h2>
+      <span class="ml-auto text-[11px] text-ink-3 dark:text-dim">팀당 6명 이내</span>
+    </div>
+    <ul id="members" class="grid gap-2 sm:grid-cols-2"></ul>
+  </section>
+
+  <!-- 활동 기록 -->
+  <section id="actSec" class="hidden rounded-2xl bg-white dark:bg-surface border border-line dark:border-edge p-5">
+    <div class="flex items-baseline gap-2 mb-3">
+      <h2 class="text-sm font-extrabold">활동 기록</h2>
+      <span class="text-[11px] text-ink-3 dark:text-dim">최근 순</span>
+    </div>
+    <ol id="acts" class="space-y-2.5"></ol>
+  </section>
+</main>
+
+<!-- 정원 초과 팝업 - 409 TEAM_FULL (F-06) -->
+<div id="fullModal" class="hidden fixed inset-0 z-40 bg-black/40 grid place-items-center p-4">
+  <section class="w-full max-w-sm rounded-2xl bg-white dark:bg-surface border border-red-dot p-5 shadow-xl">
+    <h2 class="text-sm font-extrabold text-red-text dark:text-red-dot">팀 정원이 찼음</h2>
+    <p id="fullMsg" class="text-[12px] text-ink-2 dark:text-dim mt-2"></p>
+    <p id="fullCode" class="text-[11px] font-mono text-red-text dark:text-red-dot mt-1">409 TEAM_FULL</p>
+    <div class="mt-4 flex justify-end">
+      <button id="fullOk" class="h-11 px-5 rounded-xl bg-ink dark:bg-fg text-white dark:text-canvas text-sm font-bold hover:opacity-90 transition">확인</button>
+    </div>
+  </section>
+</div>
+
+<script>
+  document.getElementById("themeSlot").innerHTML = window.THEME_BTN;
+  window.initTheme();
+
+  const $ = (id) => document.getElementById(id);
+  const LOCK = ["opacity-40", "pointer-events-none"];
+  const fail = (e) => window.toast("red", esc(e.msg || e.code), esc(e.status + " " + e.code));
+
+  let ME = null, TEAM = null;
+
+  function renderMembers(list){
+    $("members").innerHTML = list.map(m => `
+      <li class="rounded-xl bg-page dark:bg-chip border border-line dark:border-edge p-3 flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-white dark:bg-surface border border-line dark:border-edge grid place-items-center text-[13px] font-extrabold">${esc(Array.from(m.name || "?")[0])}</div>
+        <div class="flex-1 min-w-0">
+          <p class="text-[13px] font-bold">${esc(m.name)}</p>
+          <p class="text-[11px] text-ink-3 dark:text-dim truncate">${esc(m.email)}</p>
+        </div>
+        <div class="text-right shrink-0">
+          <span class="px-2 py-0.5 rounded-md text-[10px] font-extrabold ${m.role === "owner" ? window.LABEL.purple : window.LABEL.blue} bg-white dark:bg-surface">${esc(m.role)}</span>
+          <p class="mt-1 text-[10px] text-ink-3 dark:text-dim">할 일 ${esc(m.todo_count)}</p>
+        </div>
+      </li>`).join("");
+    $("mCap").textContent = list.length + " / 6";
+  }
+
+  function renderActs(list){
+    $("acts").innerHTML = list.map(a => `
+      <li class="rounded-xl bg-page dark:bg-chip border border-line dark:border-edge ${window.STRIPE[window.KIND_COLOR[a.kind] || "blue"]} px-3.5 py-2.5">
+        <p class="text-[13px]"><span class="font-bold">${esc(a.actor_name || "알 수 없음")}</span>  ·  ${esc(a.text)}</p>
+        <p class="text-[11px] text-ink-3 dark:text-dim mt-0.5">${esc(window.relTime(a.created_at))}</p>
+      </li>`).join("") || `<li class="text-[12px] text-ink-3 dark:text-dim py-2">활동 기록 없음</li>`;
+  }
+
+  // 소속 팀 없음 (F-02) - 회의록 · 할 일 메뉴를 흐리고 막는다
+  const noTeam = (on) => {
+    $("onboard").classList.toggle("hidden", !on);
+    ["info", "memSec", "actSec"].forEach(i => $(i).classList.toggle("hidden", on));
+    document.querySelectorAll("[data-needteam]").forEach(a => {
+      a.classList.toggle("opacity-30", on);
+      a.classList.toggle("pointer-events-none", on);
+      if (on) { a.setAttribute("aria-disabled", "true"); a.setAttribute("tabindex", "-1"); }
+      else { a.removeAttribute("aria-disabled"); a.removeAttribute("tabindex"); }
+    });
+    $("viewer").textContent = on ? "소속 팀 없음" : ME.name + " · " + TEAM.name;
+  };
+
+  // 팀 설정 (F-01) · member 잠금 (F-08)
+  async function showTeam(){
+    noTeam(false);
+    const owner = TEAM.role === "owner";
+    $("tName").value = TEAM.name;
+    $("tName").readOnly = !owner;
+    $("tName").classList.toggle("opacity-60", !owner);
+    $("nameLabel").textContent = owner ? "팀 이름" : "팀 이름 (owner 만 수정)";
+    $("lockNote").classList.toggle("hidden", owner);
+    [$("newCodeBtn"), $("saveName")].forEach(b => {
+      b.disabled = !owner;
+      LOCK.forEach(c => b.classList.toggle(c, !owner));
+    });
+    $("code").textContent = TEAM.invite_code;
+    const [mem, acts] = await Promise.allSettled([
+      API.get("/api/teams/" + TEAM.id + "/members"),
+      API.get("/api/teams/" + TEAM.id + "/activities")
+    ]);
+    if (mem.status === "fulfilled") renderMembers(mem.value); else fail(mem.reason);
+    if (acts.status === "fulfilled") renderActs(acts.value); else fail(acts.reason);
+  }
+
+  // 팀 이름 저장 (F-07) - owner 만. member 가 부르면 403 OWNER_ONLY
+  $("saveName").onclick = async () => {
+    try {
+      TEAM = await API.put("/api/teams/" + TEAM.id, {name: $("tName").value});
+      $("tName").value = TEAM.name;
+      $("viewer").textContent = ME.name + " · " + TEAM.name;
+      window.toast("green", "팀 이름 저장");
+    } catch (e) { fail(e); }
+  };
+
+  // 초대코드 복사 (F-04) - member 도 가능
+  $("copyBtn").onclick = async () => {
+    const code = TEAM.invite_code;
+    try {
+      await navigator.clipboard.writeText(code);
+      window.toast("green", "초대코드를 복사함 - " + esc(code), "받는 사람은 회원가입 뒤 초대코드로 합류");
+    } catch (_) {
+      window.toast("red", "복사하지 못함 - " + esc(code), "코드를 직접 옮겨 적어 전달");
+    }
+  };
+
+  // 초대코드 재발급 (F-05) - owner 만. 이전 코드 폐기
+  $("newCodeBtn").onclick = async () => {
+    const old = TEAM.invite_code;
+    try {
+      TEAM = await API.put("/api/teams/" + TEAM.id + "/code");
+      $("code").textContent = TEAM.invite_code;
+      $("code").classList.add("ring-2", "ring-green-dot", "text-green-text");
+      window.toast("green", "새 초대코드 발급 - " + esc(old) + " 폐기", "이미 합류한 멤버는 그대로");
+    } catch (e) { fail(e); }
+  };
+
+  // 팀 만들기 (F-02) - 성공하면 회의록 화면으로
+  $("createBtn").onclick = async () => {
+    $("createBtn").disabled = true;
+    try {
+      await API.post("/api/teams", {name: $("newName").value});
+      location.href = "meetings.html";
+    } catch (e) { fail(e); $("createBtn").disabled = false; }
+  };
+
+  // 초대코드로 합류 (F-02 · F-03 · F-06)
+  $("joinCode").oninput = () => { $("joinCode").classList.remove("border-red-dot"); $("joinErr").classList.add("hidden"); };
+  $("joinBtn").onclick = async () => {
+    $("joinCode").classList.remove("border-red-dot"); $("joinErr").classList.add("hidden");
+    $("joinBtn").disabled = true;
+    try {
+      await API.post("/api/teams/join", {code: $("joinCode").value});
+      location.href = "meetings.html";
+      return;
+    } catch (e) {
+      if (e.code === "INVITE_NOT_FOUND") {
+        $("joinCode").classList.add("border-red-dot");
+        $("joinErr").textContent = "없는 초대코드 - 계정은 그대로 유지";
+        $("joinErr").classList.remove("hidden");
+      } else if (e.code === "TEAM_FULL") {
+        $("fullMsg").textContent = (e.msg || "팀은 이미 6명") + ". owner 에게 문의";
+        $("fullCode").textContent = e.status + " " + e.code;
+        $("fullModal").classList.remove("hidden");
+      } else fail(e);
+    }
+    $("joinBtn").disabled = false;
+  };
+  $("fullOk").onclick = () => $("fullModal").classList.add("hidden");
+
+  (async () => {
+    let b;
+    try { b = await boot({needTeam: false}); }
+    catch (e) { fail(e); return; }
+    ME = b.user; TEAM = b.team;
+    if (TEAM) showTeam(); else noTeam(true);
+  })();
+</script>
+</body>
+</html>
