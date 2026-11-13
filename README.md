@@ -3,7 +3,7 @@
 # MeetingNote Pro
 
 **로그인한 팀이 함께 쓰는 회의록**
-녹취를 올리면 받아쓰고, 본문을 **요약 · 결정사항 · 할 일**로 나누고, 할 일은 **칸반**으로 추적하며, **댓글**과 **활동 기록**이 남습니다.
+녹취를 올리면 받아쓰고, 본문을 **요약 · 결정사항 · 할 일**로 나누고, 할 일은 **칸반**으로 추적하며(기한은 회의 날짜 기준 **날짜**로), **댓글**과 **활동 기록**이 남습니다.
 
 ![Python](https://img.shields.io/badge/Python-3.12+-3776AB?logo=python&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688?logo=fastapi&logoColor=white)
@@ -11,7 +11,7 @@
 ![Tailwind](https://img.shields.io/badge/Tailwind-CDN-06B6D4?logo=tailwindcss&logoColor=white)
 ![Gemini](https://img.shields.io/badge/Gemini-flash--lite-4285F4?logo=googlegemini&logoColor=white)
 ![Vercel](https://img.shields.io/badge/Deploy-Vercel%20%2B%20Neon-000000?logo=vercel)
-![Tests](https://img.shields.io/badge/pytest-40%20passed-2EA44F)
+![Tests](https://img.shields.io/badge/pytest-100%20passed-2EA44F)
 ![API](https://img.shields.io/badge/API-27%20endpoints-6B3590)
 ![OpenSpec](https://img.shields.io/badge/OpenSpec-spec--driven-1F2A44)
 
@@ -52,7 +52,8 @@
 | **사용자** | 팀 리더(결정사항의 행방 추적) · 팀원(내 할 일만) · 신규 합류자(검색으로 지난 결정 찾기) |
 | **규모** | API 27개 · DB 7테이블 · 화면 6종 · 스토리보드 상태 63개 |
 | **스택** | FastAPI + SQLAlchemy · Vanilla JS + Tailwind CDN · Gemini · SQLite(로컬) / Neon Postgres(배포) |
-| **품질** | pytest 40개 통과 · 엔드포인트 점검 75건 통과 · 실제 녹취 전사 시험 통과 · 360px · 다크 모드 확인 |
+| **품질** | pytest 100개 통과 · 엔드포인트 점검 83건 통과 · 실제 녹취 전사 시험 통과 · 360px · 다크 모드 확인 |
+| **이력** | 1회차 `add-mvp-core` (MVP 전체) → 2회차 `modify-todo-due-date` (할 일 기한을 날짜로) |
 
 ---
 
@@ -74,7 +75,7 @@
 
 <img src="docs/screenshots/05-detail.png" alt="회의록 상세">
 
-### 할 일 칸반 - 끌어서 옮기기 · 기한 지남은 붉은 띠
+### 할 일 칸반 - 끌어서 옮기기 · 기한은 날짜로 · 지난 기한은 붉은 띠
 
 <img src="docs/screenshots/06-todos.png" alt="할 일 칸반">
 
@@ -105,7 +106,7 @@
 | 1 | **인증** | 회원가입 · 로그인 · JWT(24h, 갱신 없음) · bcrypt · 내 정보 수정 · 로그아웃 | 5 |
 | 2 | **팀** | 팀 생성 · 초대코드(`MN-XXXX`) 발급과 재발급 · 합류 · 멤버 · 팀 이름. 한 사람 한 팀 · 6명 정원 | 6 |
 | 3 | **회의록** | 녹취 업로드 · Gemini 받아쓰기 · 요약/결정사항/할 일 구분 · CRUD · 제목 · 참석자 검색 · 기간 | 6 |
-| 4 | **할 일 칸반** | 대기 · 진행 · 완료 3열 · 포인터 끌기 · 눌러서 칸 고르기 · 담당자 배정 · 직접 등록 · 삭제 | 5 |
+| 4 | **할 일 칸반** | 대기 · 진행 · 완료 3열 · 포인터 끌기 · 눌러서 칸 고르기 · 담당자 배정 · 직접 등록 · 삭제 · **기한 날짜 환산**(「다음 주 금요일」 → `11-20 (금)`) | 5 |
 | 5 | **댓글** | 회의록에 의견 달기 (500자) · 목록 · 삭제 | 3 |
 | 6 | **활동 기록** | 회의록 등록 · 할 일 배정과 완료 · 댓글 · 합류 5종을 팀 활동 · 내 활동으로 | 2 |
 
@@ -233,6 +234,7 @@ sequenceDiagram
     A->>G: 세 항목 구분 (JSON 응답 스키마)
     G-->>A: summary · decisions[] · todos[{what, assignee, due}]
     A->>A: 담당자 이름 대조 (공백 · 「님」 무시, 없으면 미정)
+    A->>A: 기한 글자 → 날짜 (회의 날짜 기준, 고정 규칙)
     A->>D: meetings 1 · todos n · activities (meeting_add, todo_assign × 담당자 수)
     A-->>W: 201 회의록 상세
     W-->>U: 팝업 닫힘 · 새 카드 강조
@@ -246,7 +248,7 @@ sequenceDiagram
 |---|---|
 | 요약 | 회의 전체를 3~5줄. 없는 사실을 보태지 않음 |
 | 결정사항 | 합의가 끝난 것만 (「하기로 했다 · 확정 · 승인」). 논의만 한 것은 넣지 않음 |
-| 할 일 | 담당자나 기한이 드러난 것만. 담당자가 멤버와 맞지 않으면 미정 - 지어내지 않음 |
+| 할 일 | 담당자나 기한이 드러난 것만. 담당자가 멤버와 맞지 않으면 미정 - 지어내지 않음. 기한은 글자(`due_text`)와 날짜(`due_date`)로 둘 다 저장 |
 | 본문 수정 | 사람이 본문을 고쳐도 다시 돌리지 않음 |
 | 구분 실패 | 저장하지 않고 502. 본문은 화면 칸에 남아 다시 저장 가능 |
 
@@ -308,7 +310,8 @@ erDiagram
         int team_id FK
         int meeting_id FK "nullable"
         text what
-        text due_text "글자 그대로"
+        text due_text "원래 글자"
+        date due_date "환산 날짜 (nullable)"
         text status "OPEN | DOING | DONE"
         int assignee_id FK "nullable"
         int author_id FK
@@ -360,7 +363,36 @@ stateDiagram-v2
 
 > 팀 생성 · 계정 변경 · 진행(DOING) 이동 · 삭제는 기록하지 않는다. 활동은 최근 50건까지 보여 준다.
 
-**기한 지남** - 서버는 판정하지 않는다. 화면이 `due_text` 가 「어제 · 지난 주 · 지난 달」인 미완료 카드에만 붉은 띠를 붙인다.
+### 기한 날짜 환산 (2회차 `modify-todo-due-date`)
+
+기한은 **원래 글자**(`due_text`)와 **날짜**(`due_date`) 두 칸이다. 서버가 고정 규칙으로 글자를 날짜로 바꾼다 - Gemini 를 쓰지 않으므로 같은 글자 · 같은 기준일이면 늘 같은 날짜다.
+
+```mermaid
+flowchart LR
+    T["기한 글자<br/>「다음 주 금요일까지」"] --> C["정리<br/>공백 · 까지/안에/내/중/쯤 떼기"]
+    C --> R{"규칙표에 있나"}
+    B["기준일<br/>회의 날짜 (한국)<br/>직접 등록이면 등록한 날"] --> R
+    R -->|있음| D["due_date<br/>2026-11-20"]
+    R -->|없음| N["due_date = null<br/>글자만 남김"]
+    D --> V{"due_date < 오늘<br/>· 미완료?"}
+    V -->|예| RED["붉은 띠"]
+```
+
+| 기한 글자 (B = 기준일, 한 주는 월요일 시작) | 날짜 | 예 (B = 11-12 목) |
+|---|---|---|
+| 오늘 · 내일 · 모레 · 어제 | B · B+1 · B+2 · B-1 | 내일 → 11-13 |
+| N일 뒤 · N주 뒤 | B+N · B+7N | 3일 후 → 11-15 |
+| 다음 주(까지) · 지난 주 | B+7 · B-7 | 다음 주까지 → 11-19 |
+| (이번 주) X요일 | 그 주의 X요일 | 금요일까지 → 11-13 |
+| 다음 주 X요일 | 다음 주의 X요일 | 다음 주 금요일 → 11-20 |
+| 이번 달 말 · 다음 달 N일 · M월 N일 · YYYY-MM-DD | 그 날짜 | 다음 달 10일 → 12-10 |
+| 이번 주(안) · 미정 · 빈 값 · 그 밖 | **null** - 글자만 남김 | 이번 주 안 → null |
+
+- **다시 환산** - 기한 글자를 고치면 같은 기준일로, 회의 날짜(`met_at`)를 고치면 딸린 할 일 전부를 새 날짜로
+- **기한 지남** - 화면이 `due_date` 가 오늘보다 앞이고 완료가 아닌 카드에만 붉은 띠. 날짜가 없으면 판정하지 않음
+- **배지** - `11-20 (금) · 다음 주 금요일` 처럼 날짜와 원래 글자를 함께
+- **정렬** - 상태 다음 `due_date`, 날짜 없는 것은 뒤
+- **기존 데이터** - 서버 시작 때 `todos.due_date` 칼럼이 없으면 만들고 빈 값을 한 번 채움 (SQLite · Postgres)
 
 ---
 
@@ -379,7 +411,7 @@ stateDiagram-v2
 ## 10. API
 
 모든 경로는 `/api/` 로 시작하고, 인증은 `Authorization: Bearer <token>`. 오류 본문은 항상 `{code, msg}` 다.
-**전체 명세** - [`reports/API_명세서.docx`](reports/API_명세서.docx) (39쪽, 요청 · 응답 예시 포함) · 실행 중이면 `http://127.0.0.1:8000/docs`
+**전체 명세** - [`reports/API_명세서.docx`](reports/API_명세서.docx) (40쪽, 요청 · 응답 예시 · 기한 환산 규칙 포함) · 실행 중이면 `http://127.0.0.1:8000/docs`
 
 <details>
 <summary><b>27개 엔드포인트 펼치기</b></summary>
@@ -403,9 +435,9 @@ stateDiagram-v2
 | Meeting | `PUT` | `/api/meetings/{id}` | 수정 (작성자 · owner) |
 | Meeting | `DELETE` | `/api/meetings/{id}` | 삭제 (할 일 · 댓글 함께) |
 | Meeting | `POST` | `/api/upload` | 녹취 업로드 → `{body}` |
-| Todo | `GET` | `/api/teams/{id}/todos` | 팀 할 일 |
+| Todo | `GET` | `/api/teams/{id}/todos` | 팀 할 일 (+ `due_date`, 기한 순) |
 | Todo | `POST` | `/api/teams/{id}/todos` | 직접 등록 |
-| Todo | `PUT` | `/api/todos/{id}` | 상태 · 담당자 · 기한 |
+| Todo | `PUT` | `/api/todos/{id}` | 상태 · 담당자 · 기한 (글자 → 날짜 다시 환산) |
 | Todo | `GET` | `/api/me/todos` | 내 할 일 |
 | Todo | `DELETE` | `/api/todos/{id}` | 삭제 |
 | Comment | `POST` | `/api/meetings/{id}/comments` | 댓글 등록 |
@@ -499,11 +531,12 @@ meetingnote-pro/
 │   ├── serial.py             응답 모양 · 권한 판정
 │   ├── activity.py           활동 kind 5종
 │   ├── gemini.py             받아쓰기 · 세 항목 구분
+│   ├── duedate.py            기한 글자 → 날짜 (2회차)
 │   └── routers/              auth · teams · meetings · todos · comments · activities
 ├── frontend/                 Vanilla JS + Tailwind CDN
 │   ├── theme.js  api.js
 │   └── login · meetings · detail · todos · team · profile .html
-├── tests/                    pytest 40개 (실제 Gemini 시험 1개 포함)
+├── tests/                    pytest 100개 (실제 Gemini 시험 1개 포함)
 ├── publish/                  확정 디자인 (퍼블리싱 원본)
 ├── docs/                     정의서 · 스토리보드 · 디자인시스템 PDF · screenshots/
 ├── reports/                  테스트 결과 보고서 · API 명세서 (docx)
@@ -544,20 +577,22 @@ uvicorn backend.main:app --reload
 ## 14. 테스트
 
 ```bash
-python -m pytest            # 40 passed
+python -m pytest            # 100 passed
 ```
 
 | 파일 | 개수 | 내용 |
 |---|---|---|
 | `test_auth.py` | 8 | 가입 · 로그인 · 토큰 만료 · 내 정보 · 오류 본문 · /docs |
 | `test_team.py` | 8 | 생성 · 합류 · 정원 · 재발급 · owner 전용 |
-| `test_meeting.py` | 12 | 목록 · 검색 · 업로드 형식과 상한 · 502 · 담당자 대조 · 권한 · 연쇄 삭제 |
-| `test_todo.py` | 6 | 상태 · 담당자 · can_delete 와 403 일치 · 정렬 |
+| `test_meeting.py` | 14 | 목록 · 검색 · 업로드 형식과 상한 · 502 · 담당자 대조 · 권한 · 연쇄 삭제 · 회의 날짜 기준 기한 |
+| `test_todo.py` | 9 | 상태 · 담당자 · can_delete 와 403 일치 · 정렬 · 등록일 기준 기한 · 다시 환산 |
+| `test_duedate.py` | 53 | 기한 글자 → 날짜 규칙 (날짜 37 · null 13 · 경계) |
+| `test_upgrade.py` | 2 | 옛 DB 에 due_date 칼럼 추가 · 채우기 |
 | `test_comment_activity.py` | 5 | 댓글 권한 · 500자 · kind 5종 · 50건 |
 | `test_gemini_live.py` | 1 | `회의_녹음.wav` 실제 전사 (키 없으면 skip) |
 
-- Gemini 는 실제 시험 1개를 빼고 가짜로 바꿔 돌린다 - 키 · 네트워크 없이 39개가 돈다
-- 엔드포인트 27개 × 정상 · 오류 75건 점검 결과는 [`reports/백엔드_엔드포인트_테스트_보고서.docx`](reports/백엔드_엔드포인트_테스트_보고서.docx)
+- Gemini 는 실제 시험 1개를 빼고 가짜로 바꿔 돌린다 - 키 · 네트워크 없이 99개가 돈다
+- 엔드포인트 27개 × 정상 · 오류 83건(기한 날짜 8건 포함) 점검 결과는 [`reports/백엔드_엔드포인트_테스트_보고서.docx`](reports/백엔드_엔드포인트_테스트_보고서.docx)
 - 브라우저: 사용 시나리오 4종 · 360px 가로 넘침 없음 · 라이트/다크 6개 화면 확인
 
 ---
@@ -594,7 +629,7 @@ flowchart LR
 
 ## 16. 개발 방식 - OpenSpec
 
-이 프로젝트는 [OpenSpec](https://github.com/Fission-AI/OpenSpec) 의 spec-driven 흐름으로 만들었다. 정의서 · 스토리보드 · 퍼블리싱을 입력으로 change 하나(`add-mvp-core`)를 제안하고, 구현하고, main spec 으로 합쳤다.
+이 프로젝트는 [OpenSpec](https://github.com/Fission-AI/OpenSpec) 의 spec-driven 흐름으로 만들었다. 정의서 · 스토리보드 · 퍼블리싱을 입력으로 change 를 제안하고, 구현하고, main spec 으로 합친다. 지금까지 change 두 개를 아카이브했다.
 
 ```mermaid
 flowchart LR
@@ -602,14 +637,16 @@ flowchart LR
     X --> P[propose<br/>proposal · specs 6 · design · tasks 41]
     P --> A[apply<br/>백엔드 → 테스트 → 화면 → 배포 설정]
     A --> H[사람 수락<br/>눈으로 확인]
-    H --> R[archive<br/>main spec 6개 · 요구사항 50]
+    H --> R[archive<br/>main spec 6개]
+    R -->|2회차| P2["modify-todo-due-date<br/>propose → apply → archive"]
 ```
 
 | 산출물 | 위치 |
 |---|---|
-| main spec (auth 13 · team 9 · meeting 12 · todo 9 · comment 3 · activity 4) | [`openspec/specs/`](openspec/specs/) |
-| 아카이브된 change (proposal · design · tasks) | [`openspec/changes/archive/2026-11-13-add-mvp-core/`](openspec/changes/archive/2026-11-13-add-mvp-core/) |
-| 요구사항마다 근거 | `<!-- 근거: B-02 · login.html -->` 처럼 스토리보드 ID 와 화면 파일 |
+| main spec (auth 13 · team 9 · meeting 13 · todo 13 · comment 3 · activity 4) | [`openspec/specs/`](openspec/specs/) |
+| 1회차 `add-mvp-core` - MVP 전체 (요구사항 50 · tasks 41) | [`openspec/changes/archive/2026-11-13-add-mvp-core/`](openspec/changes/archive/2026-11-13-add-mvp-core/) |
+| 2회차 `modify-todo-due-date` - 기한을 날짜로 (+5 · ~5 · tasks 18) | [`openspec/changes/archive/2026-11-13-modify-todo-due-date/`](openspec/changes/archive/2026-11-13-modify-todo-due-date/) |
+| 요구사항마다 근거 | `<!-- 근거: B-02 · login.html -->` 처럼 스토리보드 ID 와 화면 파일. 2회차에 바뀐 것은 change 이름까지 |
 
 ---
 
@@ -635,6 +672,6 @@ flowchart LR
 | [`docs/MeetingNote Pro_프로그램정의.pdf`](docs/) | 미션 · 기능 · DB · API · ACME · 비기능 요구사항 |
 | [`docs/MeetingNote Pro_스토리보드.pdf`](docs/) | 화면 6종 · 상태 63개 · I-01 통합 매핑표 |
 | [`docs/MeetingNote Pro_디자인시스템.pdf`](docs/) | 팔레트 · 면적 규칙 · 컴포넌트 규격 |
-| [`reports/API_명세서.docx`](reports/API_명세서.docx) | API 27개 상세 · 데이터 모델 · 요청/응답 예시 |
-| [`reports/백엔드_엔드포인트_테스트_보고서.docx`](reports/백엔드_엔드포인트_테스트_보고서.docx) | 엔드포인트 체크리스트 · 75건 점검 결과 |
+| [`reports/API_명세서.docx`](reports/API_명세서.docx) | API 27개 상세 · 데이터 모델 · 요청/응답 예시 · 기한 날짜 환산 규칙 (v1.1) |
+| [`reports/백엔드_엔드포인트_테스트_보고서.docx`](reports/백엔드_엔드포인트_테스트_보고서.docx) | 엔드포인트 체크리스트 · 83건 점검 결과 · pytest 100 (v1.1) |
 | [`publish/index.html`](publish/index.html) | 확정 디자인 (STATE 바로 상태 전환) |
