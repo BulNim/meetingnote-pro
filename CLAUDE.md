@@ -3,7 +3,7 @@
 - 사용자가 메시지를 보낼 때마다 훅(`.claude/hooks/openspec-stage.sh`)이 `📐 OpenSpec 단계: EXPLORE | [EXPLORE] > propose > apply > archive | …` 한 줄을 화면 로그에 남긴다
 - 단계는 **워크플로 단계** 넷이다: explore → propose → apply → archive. openspec-* 스킬을 부르면 PostToolUse(Skill) 훅이 `.claude/openspec-phase` 에 적는다 (explore · propose · update-change=propose · apply-change=apply · sync-specs · archive-change=archive)
 - 줄 끝에는 change 마다 산출물 진행도(proposal · specs · design · tasks 작성 전, tasks 완료/전체)를 붙인다
-- **모든 답변의 맨 윗줄에 그 단계 줄을 그대로 적는다.** 답변 중에 단계가 바뀌었으면(다른 openspec 스킬 호출, 산출물 작성, 작업 체크) 답변 끝에 바뀐 단계 줄을 한 번 더 적는다
+- **모든 답변의 맨 윗줄에 그 단계 줄을 굵게(`**…**`) 그대로 적는다.** 🔴 표시를 빼지 않는다. 답변 중에 단계가 바뀌었으면(다른 openspec 스킬 호출, 산출물 작성, 작업 체크) 답변 끝에 바뀐 단계 줄을 한 번 더 적는다
 
 # 작업 관리 규칙 (todo-guard)
 
