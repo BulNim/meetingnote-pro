@@ -1,0 +1,37 @@
+schema: spec-driven
+
+context: |
+  Language: ko
+  All artifacts must be written in ko.
+  Keep OpenSpec structural headings and SHALL/MUST keywords in English.
+
+rules:
+  specs:
+    - 각 Requirement 본문 첫 줄에 근거 스토리보드 ID 와 그 상태의 퍼블리싱 파일을 주석으로 남길 것. 상태가 없으면 정의서 절, 2회차에 바뀌면 change 이름도 적을 것
+    - 설계문서에 근거가 없으면(지시로 생긴 요구사항) 근거 자리에 change 이름과 (지시) 를 적을 것
+    - 새 capability 의 Purpose 절은 50자 이상으로 쓸 것
+  tasks:
+    - 테스트는 백엔드 구현 그룹 바로 뒤에 「백엔드 테스트」 그룹 하나로 둘 것. 사람 수락 항목은 맨 아래
+
+
+# Per-artifact rules (optional)
+# Add custom rules for specific artifacts.
+# Example:
+#   rules:
+#     proposal:
+#       - Keep proposals under 500 words
+#       - Always state what is out of scope
+#     tasks:
+#       - Break tasks into chunks of max 2 hours
+
+# Per-operation guidance (optional)
+# Add advisory guidance for how apply and archive work should be conducted.
+# This is separate from artifact rules above.
+# Example:
+#   operations:
+#     apply:
+#       guidance:
+#         - Keep test summaries concise
+#     archive:
+#       guidance:
+#         - Summarize the archive outcome before finishing
