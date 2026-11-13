@@ -19,3 +19,6 @@ __pycache__/
 .claude/todo-guard.json
 .claude/settings.local.json
 .playwright-mcp/
+
+.vercel
+.env*

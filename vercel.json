@@ -1,3 +1,4 @@
 {
-  "framework": "fastapi"
+  "framework": "fastapi",
+  "regions": ["sin1"]
 }
